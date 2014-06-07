@@ -1,0 +1,15 @@
+doctype html
+html(lang="en")
+  head
+    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css')
+    link(rel='stylesheet', href='css/main.css')
+    script(src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js')
+    title #{pageTitle} ##{gameID}
+  body
+    div.container
+      if gameID === undefined
+        h1 Invalid game
+      else
+        h1 This is game id #{gameID}
+
+    script(src='//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js')
