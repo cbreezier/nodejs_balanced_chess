@@ -15,9 +15,6 @@ db.open(function(err, client) {
     mongoTest.remove();
     mongoTest.insert({game_id: 1, player_black: "Random", player_white: "Bob", spectators: 12});
     mongoTest.insert({game_id: 2, player_black: "test", player_white: "hi", spectators: 1});
-
-    var games = mongoTest.find({});
-    sendGameList();
   });
 });
 
@@ -33,14 +30,14 @@ app.configure(function() {
 app.get('/', function(req, res) {
   res.render('index', {pageTitle: 'Some Title'});
 });
-app.get('/game', function(req, res) {
-  res.render('game', {pageTitle: 'Game', gameID: req.query.id});
+app.get('/game/:game_id', function(req, res) {
+  res.render('game', {pageTitle: 'Game', gameID: req.params.game_id});
 });
 
 io.sockets.on('connection', function (socket) {
   console.log("debug: connection established with", socket.id);
   // Send initial game data to new connecting client
-  sendGameList();
+  sendGameList(socket);
 
   // When receiving a message on lobby-chat, emit to all clients
   socket.on('lobby-chat', function (data) {
@@ -50,14 +47,14 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-function sendGameList() {
+function sendGameList(socket) {
   if (mongoTest !== undefined) {
     var games = mongoTest.find({});
     var gameList = [];
     games.each(function (err, doc) {
       if (doc == null) {
         console.log("Game list is:", gameList);
-        io.sockets.emit('new-game-list', {message: gameList});
+        socket.emit('new-game-list', {message: gameList});
       } else {
         console.log(doc);
         gameList.push(doc);
