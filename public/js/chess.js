@@ -19,6 +19,13 @@ function Board(id) {
         cells[row][col].draw(this.g, tileSize);
       }
     }
+
+    if (this.clicked !== null) {
+      var x = this.clicked.col * tileSize;
+      var y = this.clicked.row * tileSize;
+      this.g.fillStyle = 'rgba(100, 100, 255, 0.3)';
+      this.g.fillRect(x, y, tileSize, tileSize);
+    }
   }
 
   this.click = function(x, y) {
@@ -50,10 +57,6 @@ function Cell(board, row, col) {
     g.fillStyle = this.baseColor;
     
     g.fillRect(x, y, size, size);
-    if (this.board.clicked === this) {
-      g.fillStyle = 'rgba(100, 100, 255, 0.3)';
-      g.fillRect(x, y, size, size);
-    }
   }
 
   this.click = function() {
@@ -79,36 +82,3 @@ HTMLCanvasElement.prototype.relMouseCoords = function (event) {
 
   return {x: canvasX, y: canvasY}
 }
-
-function mixColor(color1, color2) {
-  var r1 = parseInt(color1.substring(1, 3), 16);
-  var g1 = parseInt(color1.substring(3, 5), 16);
-  var b1 = parseInt(color1.substring(5, 7), 16);
-
-  var r2 = parseInt(color2.substring(1, 3), 16);
-  var g2 = parseInt(color2.substring(3, 5), 16);
-  var b2 = parseInt(color2.substring(5, 7), 16);
-
-  var r3 = r1 + r2;
-  var g3 = g1 + g2;
-  var b3 = b1 + b2;
-  
-  var maxVal = Math.max(Math.max(r3, g3), b3);
-  if (maxVal > 255) {
-    var scaler = maxVal / 255;
-    r3 = r3 / scaler;
-    g3 = g3 / scaler;
-    b3 = b3 / scaler;
-  }
-
-  r3 = (r3 > 255 ? 255 : r3).toString(16);
-  g3 = (g3 > 255 ? 255 : g3).toString(16);
-  b3 = (b3 > 255 ? 255 : b3).toString(16);
-
-  r3 = r3.length == 1 ? '0' + r3 : r3;
-  g3 = g3.length == 1 ? '0' + g3 : g3;
-  b3 = b3.length == 1 ? '0' + b3 : b3;
-
-  return '#' + r3 + g3 + b3;
-}
-
