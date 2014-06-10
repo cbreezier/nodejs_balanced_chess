@@ -33,6 +33,7 @@ function Board(id) {
   this.c = document.getElementById(id);
   this.g = this.c.getContext('2d');
   this.clicked = null;
+  this.moveSelected = null;
   this.highlighted = [];
 
   this.draw = function() {
@@ -51,21 +52,53 @@ function Board(id) {
       this.g.fillStyle = 'rgba(100, 100, 255, 0.3)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
+    if (this.moveSelected !== null) {
+      var x = this.moveSelected.col * tileSize;
+      var y = this.moveSelected.row * tileSize;
+      this.g.fillStyle = 'rgba(100, 255, 100, 0.5)';
+      this.g.fillRect(x, y, tileSize, tileSize);
+    }
 
     for (var i = 0; i < this.highlighted.length; i++) {
       var x = this.highlighted[i].x * tileSize;
       var y = this.highlighted[i].y * tileSize;
-      this.g.fillStyle = 'rgba(255, 100, 100, 0.3)';
+      this.g.fillStyle = 'rgba(255, 100, 100, 0.5)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
   }
 
   this.click = function(x, y) {
-    this.highlighted = [];
-
     var tileSize = c.width / 8;
     var col = Math.floor(x / tileSize);
     var row = Math.floor(y / tileSize);
+
+    // Unclicking a previously clicked thing
+    if (this.clicked !== null && this.clicked.col === col && this.clicked.row === row) {
+      this.highlighted = [];
+      this.clicked = null;
+      this.moveSelected = null;
+    } else {
+      // See if selecting move or clicking new cell
+      var unhighlight = true;
+      for (var i = 0; i < this.highlighted.length; i++) {
+        console.log('check', this.highlighted[i], col);
+        if (this.highlighted[i].x === col && this.highlighted[i].y === row) {
+          unhighlight = false;
+          break;
+        }
+      }
+
+      if (unhighlight) {
+        // Clicking new cell
+        this.highlighted = [];
+        this.clicked = {col: col, row: row};
+        this.moveSelected = null;
+      } else {
+        // Selecting a move
+        this.moveSelected = {col: col, row: row};
+      }
+    }
+
     cells[row][col].click();
   }
 
@@ -163,20 +196,11 @@ function Cell(board, row, col) {
     this.piece = new Piece(this, player, pieceType);
   }
 
-  this.click = function() {
+  this.click = function(unclickPrevious) {
     console.log('    Clicked cell at', this.col, this.row);
 
-    if (this.board.clicked === this) {
-      // Unclicking
-      this.board.clicked = null;
-    } else {
-      // Clicking
-      this.board.clicked = this;
-
-      // Check what we have to highlight
-      if (this.piece === null) {
-        return;
-      }
+    // Check what we have to highlight
+    if (this.piece !== null && this.board.clicked !== null) {
       if (this.piece.pieceType === 'C') {
         for (var i = 0; i < cardinals.length; i++) {
           var moves = this.board.possibleMoves({x: this.col, y: this.row}, cardinals[i]);

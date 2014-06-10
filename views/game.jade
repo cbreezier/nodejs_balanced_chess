@@ -12,6 +12,7 @@ html(lang="en")
       else
         h1 This is game id #{gameID}
         canvas#game_canvas(width='520', height='520')
+        button#temp Make Move
 
     script(src='//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js')
     script(src='../js/chess.js')
@@ -27,4 +28,8 @@ html(lang="en")
         b.click(coords.x, coords.y);
         b.draw();
       }
+
+      $('#temp').on('click', function(event) {
+        console.log('temp button pressed');
+      });
 
