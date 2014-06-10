@@ -200,7 +200,7 @@ function Cell(board, row, col) {
     console.log('    Clicked cell at', this.col, this.row);
 
     // Check what we have to highlight
-    if (this.piece !== null && this.board.clicked !== null) {
+    if (this.piece !== null && this.board.clicked !== null && this.board.moveSelected === null) {
       if (this.piece.pieceType === 'C') {
         for (var i = 0; i < cardinals.length; i++) {
           var moves = this.board.possibleMoves({x: this.col, y: this.row}, cardinals[i]);
