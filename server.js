@@ -8,6 +8,7 @@ var mongo = require('mongodb');
 var mongoServer = new mongo.Server('ds033669.mongolab.com', 33669, {auto_reconnect: true, safe: false});
 var db = new mongo.Db('balanced_chess', mongoServer);
 var mongoTest;
+var mongoUsers;
 db.open(function(err, client) {
   client.authenticate('app', 'password', function(err, success) {
     console.log('Successfully authen mongo');
@@ -15,12 +16,20 @@ db.open(function(err, client) {
     mongoTest.remove();
     mongoTest.insert({game_id: 1, player_black: "Random", player_white: "Bob", spectators: 12});
     mongoTest.insert({game_id: 2, player_black: "test", player_white: "hi", spectators: 1});
+
+    mongoUsers = db.collection('users');
+    mongoUsers.remove();
+    mongoUsers.insert({user: 'Test', pass: 'abc123', other: 'other information'});
   });
 });
 
 app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
+  app.use(express.cookieParser('1qaz@WSX'));
+  app.use(express.session());
+  // app.use(express.json());
+  app.use(express.urlencoded());
   app.use(express.favicon()); // TODO specify favicon
   app.use(express.logger());
   app.use(app.router);
@@ -28,10 +37,44 @@ app.configure(function() {
 });
 
 app.get('/', function(req, res) {
-  res.render('index', {pageTitle: 'Some Title'});
+  console.log('Session =', req.sessionID);
+  mongoUsers.findOne({sessionID: req.sessionID}, function(err, doc) {
+    if (err) throw err;
+
+    if (doc === null) {
+      res.render('index', {pageTitle: 'Some Title', user: undefined});
+    } else {
+      console.log('search sessio id', doc);
+      res.render('index', {pageTitle: 'Some Title', user: doc.user});
+    }
+  });
 });
 app.get('/game/:game_id', function(req, res) {
   res.render('game', {pageTitle: 'Game', gameID: req.params.game_id});
+});
+app.post('/login', function(req, res) {
+  var user = req.body.user;
+  var pass = req.body.pass;
+  
+  mongoUsers.findOne({user: user}, function(err, doc) {
+    if (err) throw err;
+
+    if (doc === null) {
+      res.send('fail');
+      return;
+    }
+    
+    var requiredPass = doc.pass;
+    console.log('required pass is', requiredPass, pass);
+
+    if (pass === requiredPass) {
+      mongoUsers.update({user: user}, {$set: {sessionID: req.sessionID}});
+      req.session.user = user;
+      res.send('success');
+    } else {
+      res.send('fail');
+    }
+  });
 });
 
 io.sockets.on('connection', function (socket) {
@@ -41,9 +84,7 @@ io.sockets.on('connection', function (socket) {
 
   // When receiving a message on lobby-chat, emit to all clients
   socket.on('lobby-chat', function (data) {
-    console.log(data.message);
     io.sockets.emit('lobby-chat', {message: data.message});
-    // mongoTest.insert({test: 'test'});
   });
 });
 
@@ -53,10 +94,8 @@ function sendGameList(socket) {
     var gameList = [];
     games.each(function (err, doc) {
       if (doc == null) {
-        console.log("Game list is:", gameList);
         socket.emit('new-game-list', {message: gameList});
       } else {
-        console.log(doc);
         gameList.push(doc);
       }
     });

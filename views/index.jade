@@ -5,39 +5,58 @@ html(lang="en")
     link(rel='stylesheet', href='css/main.css')
     script(src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js')
     title #{pageTitle}
-  body
-    div.container
-      div.row
-        div.col-sm-6
-          h1 Game List
-          div#game-list
-        div.col-sm-6
-          h1 Lobby Chat
-          div#lobby-chat
-          input(type='text', id='chatInput', class='form-control', placeholder='message')
-
-    script(src='//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js')
-    script.
-      var socket = io.connect();
-      
-      $('#chatInput').on('keyup', function(e) {
-        if (e.keyCode == 13) {
-          // enter is pressed
-          e.preventDefault();
-          var message = $('#chatInput').val();
-          $('#chatInput').val('');
-
-          socket.emit('lobby-chat', {message: message});
-        }
-      });
-
-      socket.on('lobby-chat', function (data) {
-        $('#lobby-chat').append('<div>'+data.message+'</div>');
-      });
-
-      socket.on('new-game-list', function (data) {
-        $('#game-list').html('');
-        data.message.forEach(function (game) {
-          $('#game-list').append('<div>'+game.game_id + game.player_white + game.player_black + game.spectators+'</div>');
+  if user === undefined
+    body
+      div.container
+        h1 Please log in
+        button#login Login
+        button#badlogin Wrong login
+      script.
+        $('#login').on('click', function(e) {
+          $.post('login', {user: 'Test', pass: 'abc123'}, function(data) {
+            location.reload(true);
+          });
         });
-      });
+        $('#badlogin').on('click', function(e) {
+          $.post('login', {user: 'Test', pass: 'aaa'}, function(data) {
+            location.reload(true);
+          });
+        });
+  else
+    body
+      div.container
+        
+        div.row
+          div.col-sm-6
+            h1 Game List
+            div#game-list
+          div.col-sm-6
+            h1 Lobby Chat
+            div#lobby-chat
+            input(type='text', id='chatInput', class='form-control', placeholder='message')
+
+      script(src='//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js')
+      script.
+        var socket = io.connect();
+        
+        $('#chatInput').on('keyup', function(e) {
+          if (e.keyCode == 13) {
+            // enter is pressed
+            e.preventDefault();
+            var message = $('#chatInput').val();
+            $('#chatInput').val('');
+
+            socket.emit('lobby-chat', {message: message});
+          }
+        });
+
+        socket.on('lobby-chat', function (data) {
+          $('#lobby-chat').append('<div>'+data.message+'</div>');
+        });
+
+        socket.on('new-game-list', function (data) {
+          $('#game-list').html('');
+          data.message.forEach(function (game) {
+            $('#game-list').append('<div>'+game.game_id + game.player_white + game.player_black + game.spectators+'</div>');
+          });
+        });

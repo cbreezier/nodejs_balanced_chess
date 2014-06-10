@@ -28,6 +28,17 @@ function Board(id) {
     }
   }
 
+  this.reset = function() {
+    var layout = 'CNBKQBNC';
+    for (var i = 0; i < 8; i++) {
+      cells[0][i].setPiece(layout.charAt(i));
+      cells[7][i].setPiece(layout.charAt(i));
+
+      cells[1][i].setPiece('P');
+      cells[6][i].setPiece('P');
+    }
+  }
+
   this.click = function(x, y) {
     console.log('Clicked coordinate', x, y);
 
@@ -36,9 +47,12 @@ function Board(id) {
     var row = Math.floor(y / tileSize);
     cells[row][col].click();
   }
+
+  this.reset();
 }
 
 function Cell(board, row, col) {
+  var piece = '';
   this.board = board;
   this.col = col;
   this.row = row;
@@ -55,8 +69,15 @@ function Cell(board, row, col) {
     var y = this.row * size;
 
     g.fillStyle = this.baseColor;
-    
     g.fillRect(x, y, size, size);
+
+    g.fillStyle = '#000000';
+    g.font = size + 'px Arial';
+    g.fillText(piece, x, y + size);
+  }
+
+  this.setPiece = function(newPiece) {
+    piece = newPiece;
   }
 
   this.click = function() {
