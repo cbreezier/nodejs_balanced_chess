@@ -18,7 +18,6 @@ html(lang="en")
     script(src='../js/chess.js')
     script.
       var b = new Board('game_canvas');
-      b.draw();
 
       var c = document.getElementById('game_canvas');
       c.addEventListener('click', clickChessBoard, false);
@@ -26,10 +25,9 @@ html(lang="en")
       function clickChessBoard(event) {
         var coords = c.relMouseCoords(event);
         b.click(coords.x, coords.y);
-        b.draw();
       }
 
       $('#temp').on('click', function(event) {
-        console.log('temp button pressed');
+        b.makeMove({from:{x: 1, y: 6}, to: {x: 1, y: 4}}, {from: {x: 3, y: 0}, to: {x: 3, y: 1}});
       });
 

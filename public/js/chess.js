@@ -30,6 +30,7 @@ function Board(id) {
        cells[row][col] = new Cell(this, row, col);
     }
   }
+  var moves = [];
   this.c = document.getElementById(id);
   this.g = this.c.getContext('2d');
   this.clicked = null;
@@ -140,6 +141,7 @@ function Board(id) {
     }
 
     cells[row][col].click();
+    this.draw();
   }
 
   this.withinBounds = function(pos) {
@@ -194,6 +196,27 @@ function Board(id) {
     return moves;
   }
 
+  this.makeMove = function(whiteMove, blackMove) {
+    var temp;
+    temp = cells[whiteMove.from.y][whiteMove.from.x].piece;
+    cells[whiteMove.from.y][whiteMove.from.x].piece = null;
+    temp.cell = cells[whiteMove.to.y][whiteMove.to.x];
+    cells[whiteMove.to.y][whiteMove.to.x].piece = temp;
+
+    temp = cells[blackMove.from.y][blackMove.from.x].piece;
+    cells[blackMove.from.y][blackMove.from.x].piece = null;
+    temp.cell = cells[blackMove.to.y][blackMove.to.x];
+    cells[blackMove.to.y][blackMove.to.x].piece = temp;
+
+    // Add move to moves[]
+    var move = '' + whiteMove.from.x + whiteMove.from.y + whiteMove.to.x + whiteMove.to.y +
+                    blackMove.from.x + blackMove.from.y + blackMove.to.x + blackMove.to.y;
+    moves.push(move);
+    console.log(moves);
+
+    this.draw();
+  }
+
   this.reset = function() {
     var layout = 'CNBQKBNC';
     for (var i = 0; i < 8; i++) {
@@ -205,6 +228,7 @@ function Board(id) {
     }
   }
   this.reset();
+  this.draw();
 }
 
 function Cell(board, row, col) {
