@@ -37,8 +37,40 @@ function Board(id) {
   this.highlighted = [];
 
   this.draw = function() {
-    var tileSize = this.c.width / 8;
+    var tileSize = this.c.width / 10;
     console.log(this.c.width, tileSize);
+    
+    // Draw side markings A-H, 1-8
+    this.g.fillStyle = '#000000';
+    this.g.fillRect(0, 0, this.c.width, this.c.height);
+    this.g.fillStyle = '#DDDDDD';
+    this.g.font = (tileSize/2) + 'px Arial';
+    for (var i = 1; i <= 8; i++) {
+      var x;
+      var y;
+      // Top row A-H
+      x = i * tileSize;
+      y = tileSize;
+      this.g.fillText(String.fromCharCode(64 + i), x, y);
+
+      // Bot row A-H
+      x = i * tileSize;
+      y = 10 * tileSize;
+      this.g.fillText(String.fromCharCode(64 + i), x, y);
+
+      // Left col 8-1
+      x = 0;
+      y = (i+1) * tileSize;
+      this.g.fillText(9 - i, x, y);
+
+      // Right col 8-1
+      x = 9 * tileSize;
+      y = (i+1) * tileSize;
+      this.g.fillText(9 - i, x, y);
+    }
+
+    this.g.save();
+    this.g.translate(tileSize, tileSize);
 
     for (var row = 0; row < 8; row++) {
       for (var col = 0; col < 8; col++) {
@@ -65,12 +97,20 @@ function Board(id) {
       this.g.fillStyle = 'rgba(255, 100, 100, 0.5)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
+    this.g.restore();
   }
 
   this.click = function(x, y) {
-    var tileSize = c.width / 8;
-    var col = Math.floor(x / tileSize);
-    var row = Math.floor(y / tileSize);
+    // 10 because we leave a space for A-H, 1-8 markings
+    var tileSize = c.width / 10;
+
+    // Subtract 1 because of the A-H, 1-8 markings
+    var col = Math.floor(x / tileSize) - 1;
+    var row = Math.floor(y / tileSize) - 1;
+
+    if (!this.withinBounds({x: col, y: row})) {
+      return;
+    }
 
     // Unclicking a previously clicked thing
     if (this.clicked !== null && this.clicked.col === col && this.clicked.row === row) {
@@ -155,7 +195,7 @@ function Board(id) {
   }
 
   this.reset = function() {
-    var layout = 'CNBKQBNC';
+    var layout = 'CNBQKBNC';
     for (var i = 0; i < 8; i++) {
       cells[0][i].setPiece('BLACK', layout.charAt(i));
       cells[7][i].setPiece('WHITE', layout.charAt(i));
