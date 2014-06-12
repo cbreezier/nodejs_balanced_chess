@@ -354,6 +354,41 @@ function Piece(cell, player, pieceType) {
   }
 }
 
+function Move(player, from, direction, distance) {
+  this.player = player;
+  this.from = from;
+  this.to = null;
+  this.direction = direction;
+  this.distance = distance;
+  this.path = [];
+
+  cur = {x: from.x, y: from.y};
+  for (var i = 0; i < this.direction; i++) {
+    cur = {x: cur.x + dx[direction], y: cur.y + dy[direction]};
+    this.path.push(cur);
+  }
+  this.to = cur;
+}
+
+/*
+ * Immutable
+ */
+function Coord(newX, newY) {
+  var x = newX;
+  var y = newY;
+
+  this.inDirection = function(direcion) {
+    return new Coord(x + dx[direction], y + dy[direction]);
+  }
+
+  this.x = function() {
+    return x;
+  }
+  this.y = function() {
+    return y;
+  }
+}
+
 HTMLCanvasElement.prototype.relMouseCoords = function (event) {
   var totalOffsetX = 0;
   var totalOffsetY = 0;
