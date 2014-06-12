@@ -80,21 +80,21 @@ function Board(id) {
     }
 
     if (this.clicked !== null) {
-      var x = this.clicked.col * tileSize;
-      var y = this.clicked.row * tileSize;
+      var x = this.clicked.getCol() * tileSize;
+      var y = this.clicked.getRow() * tileSize;
       this.g.fillStyle = 'rgba(100, 100, 255, 0.3)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
     if (this.moveSelected !== null) {
-      var x = this.moveSelected.col * tileSize;
-      var y = this.moveSelected.row * tileSize;
+      var x = this.moveSelected.getCol() * tileSize;
+      var y = this.moveSelected.getRow() * tileSize;
       this.g.fillStyle = 'rgba(100, 255, 100, 0.5)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
 
     for (var i = 0; i < this.highlighted.length; i++) {
-      var x = this.highlighted[i].x * tileSize;
-      var y = this.highlighted[i].y * tileSize;
+      var x = this.highlighted[i].getCol() * tileSize;
+      var y = this.highlighted[i].getRow() * tileSize;
       this.g.fillStyle = 'rgba(255, 100, 100, 0.5)';
       this.g.fillRect(x, y, tileSize, tileSize);
     }
@@ -109,12 +109,12 @@ function Board(id) {
     var col = Math.floor(x / tileSize) - 1;
     var row = Math.floor(y / tileSize) - 1;
 
-    if (!this.withinBounds({x: col, y: row})) {
+    if (!this.withinBounds(new Coord(row, col))) {
       return;
     }
 
     // Unclicking a previously clicked thing
-    if (this.clicked !== null && this.clicked.col === col && this.clicked.row === row) {
+    if (this.clicked !== null && this.clicked.getCol() === col && this.clicked.getRow() === row) {
       this.highlighted = [];
       this.clicked = null;
       this.moveSelected = null;
@@ -123,7 +123,7 @@ function Board(id) {
       var unhighlight = true;
       for (var i = 0; i < this.highlighted.length; i++) {
         console.log('check', this.highlighted[i], col);
-        if (this.highlighted[i].x === col && this.highlighted[i].y === row) {
+        if (this.highlighted[i].getCol() === col && this.highlighted[i].getRow() === row) {
           unhighlight = false;
           break;
         }
@@ -132,11 +132,11 @@ function Board(id) {
       if (unhighlight) {
         // Clicking new cell
         this.highlighted = [];
-        this.clicked = {col: col, row: row};
+        this.clicked = new Coord(row, col);
         this.moveSelected = null;
       } else {
         // Selecting a move
-        this.moveSelected = {col: col, row: row};
+        this.moveSelected = new Coord(row, col);
       }
     }
 
@@ -145,13 +145,15 @@ function Board(id) {
   }
 
   this.withinBounds = function(pos) {
-    if (pos.x < 0 || pos.x > 7 || pos.y < 0 || pos.y > 7) {
+    var col = pos.getCol();
+    var row = pos.getRow();
+    if (col < 0 || col > 7 || row < 0 || row > 7) {
       return false;
     }
     return true;
   }
   this.isValid = function(pos) {
-    if (this.withinBounds(pos) && cells[pos.y][pos.x].piece === null) {
+    if (this.withinBounds(pos) && cells[pos.getRow()][pos.getCol()].piece === null) {
       // Empty and valid
       return true;
     } else {
@@ -160,13 +162,13 @@ function Board(id) {
   }
 
   this.possibleMoves = function(start, direction, limit) {
-    var pos = {x: start.x + dx[direction], y: start.y + dy[direction]};
+    var pos = start.inDirection(direction);
     var moves = [];
 
     var steps = 0;
     while (this.isValid(pos)) {
       moves.push(pos);
-      pos = {x: pos.x + dx[direction], y: pos.y + dy[direction]};
+      pos = pos.inDirection(direction);
       steps++;
 
       if (limit !== undefined && steps === limit) {
@@ -187,7 +189,7 @@ function Board(id) {
     var moves = [];
 
     for (var i = 0; i < 8; i++) {
-      var pos = {x: start.x + knightDX[i], y: start.y + knightDY[i]};
+      var pos = new Coord(start.getRow() + knightDY[i], start.getCol() + knightDX[i]);
       if (this.withinBounds(pos)) {
         moves.push(pos);
       }
@@ -198,19 +200,19 @@ function Board(id) {
 
   this.makeMove = function(whiteMove, blackMove) {
     var temp;
-    temp = cells[whiteMove.from.y][whiteMove.from.x].piece;
-    cells[whiteMove.from.y][whiteMove.from.x].piece = null;
-    temp.cell = cells[whiteMove.to.y][whiteMove.to.x];
-    cells[whiteMove.to.y][whiteMove.to.x].piece = temp;
+    temp = cells[whiteMove.from.row][whiteMove.from.col].piece;
+    cells[whiteMove.from.row][whiteMove.from.col].piece = null;
+    temp.cell = cells[whiteMove.to.row][whiteMove.to.col];
+    cells[whiteMove.to.row][whiteMove.to.col].piece = temp;
 
-    temp = cells[blackMove.from.y][blackMove.from.x].piece;
-    cells[blackMove.from.y][blackMove.from.x].piece = null;
-    temp.cell = cells[blackMove.to.y][blackMove.to.x];
-    cells[blackMove.to.y][blackMove.to.x].piece = temp;
+    temp = cells[blackMove.from.row][blackMove.from.col].piece;
+    cells[blackMove.from.row][blackMove.from.col].piece = null;
+    temp.cell = cells[blackMove.to.row][blackMove.to.col];
+    cells[blackMove.to.row][blackMove.to.col].piece = temp;
 
     // Add move to moves[]
-    var move = '' + whiteMove.from.x + whiteMove.from.y + whiteMove.to.x + whiteMove.to.y +
-                    blackMove.from.x + blackMove.from.y + blackMove.to.x + blackMove.to.y;
+    var move = '' + whiteMove.from.col + whiteMove.from.row + whiteMove.to.col + whiteMove.to.row +
+                    blackMove.from.col + blackMove.from.row + blackMove.to.col + blackMove.to.row;
     moves.push(move);
     console.log(moves);
 
@@ -265,27 +267,28 @@ function Cell(board, row, col) {
 
     // Check what we have to highlight
     if (this.piece !== null && this.board.clicked !== null && this.board.moveSelected === null) {
+      var pos = new Coord(this.row, this.col);
       if (this.piece.pieceType === 'C') {
         for (var i = 0; i < cardinals.length; i++) {
-          var moves = this.board.possibleMoves({x: this.col, y: this.row}, cardinals[i]);
+          var moves = this.board.possibleMoves(pos, cardinals[i]);
           this.board.highlighted = this.board.highlighted.concat(moves);
         }
       } else if (this.piece.pieceType === 'B') {
         for (var i = 0; i < diagonals.length; i++) {
-          var moves = this.board.possibleMoves({x: this.col, y: this.row}, diagonals[i]);
+          var moves = this.board.possibleMoves(pos, diagonals[i]);
           this.board.highlighted = this.board.highlighted.concat(moves);
         }
       } else if (this.piece.pieceType === 'N') {
-        var moves = this.board.possibleMovesKnight({x: this.col, y: this.row});
+        var moves = this.board.possibleMovesKnight(pos);
         this.board.highlighted = this.board.highlighted.concat(moves);
       } else if (this.piece.pieceType === 'Q') {
         for (var i = 0; i < directions.length; i++) {
-          var moves = this.board.possibleMoves({x: this.col, y: this.row}, directions[i]);
+          var moves = this.board.possibleMoves(pos, directions[i]);
           this.board.highlighted = this.board.highlighted.concat(moves);
         }
       } else if (this.piece.pieceType === 'K') {
         for (var i = 0; i < directions.length; i++) {
-          var moves = this.board.possibleMoves({x: this.col, y: this.row}, directions[i], 1);
+          var moves = this.board.possibleMoves(pos, directions[i], 1);
           this.board.highlighted = this.board.highlighted.concat(moves);
         }
       } else if (this.piece.pieceType === 'P') {
@@ -306,23 +309,21 @@ function Cell(board, row, col) {
 
         // Moves and initial pos
         var moves = [];
-        pos = {x: this.col, y: this.row};
 
-        console.log('before diag');
         // Check diagonal killing
         var diagPos;
-        diagPos = {x: pos.x + 1, y: pos.y + dy[direction]};
+        diagPos = pos.inDirection('EAST').inDirection(direction);
         if (this.board.withinBounds(diagPos) && !this.board.isValid(diagPos)) {
           moves.push(diagPos);
         }
-        diagPos = {x: pos.x - 1, y: pos.y + dy[direction]};
+        diagPos = pos.inDirection('WEST').inDirection(direction);
         if (this.board.withinBounds(diagPos) && !this.board.isValid(diagPos)) {
           moves.push(diagPos);
         }
 
         // Check forward movement
         for (var i = 0; i < jump; i++) {
-          pos = {x: pos.x, y: pos.y + dy[direction]};
+          pos = pos.inDirection(direction);
           if (this.board.isValid(pos)) {
             moves.push(pos);
           }
@@ -362,9 +363,9 @@ function Move(player, from, direction, distance) {
   this.distance = distance;
   this.path = [];
 
-  cur = {x: from.x, y: from.y};
+  var cur = new Coord(from.getRow(), from.getCol());
   for (var i = 0; i < this.direction; i++) {
-    cur = {x: cur.x + dx[direction], y: cur.y + dy[direction]};
+    cur = cur.inDirection(direction);
     this.path.push(cur);
   }
   this.to = cur;
@@ -373,19 +374,23 @@ function Move(player, from, direction, distance) {
 /*
  * Immutable
  */
-function Coord(newX, newY) {
-  var x = newX;
-  var y = newY;
+function Coord(newRow, newCol) {
+  var row = newRow;
+  var col = newCol;
 
-  this.inDirection = function(direcion) {
-    return new Coord(x + dx[direction], y + dy[direction]);
+  this.inDirection = function(direction) {
+    var newCoord = new Coord(row + dy[direction], col + dx[direction]);
+    return newCoord;
   }
 
-  this.x = function() {
-    return x;
+  this.getRow = function() {
+    return row;
   }
-  this.y = function() {
-    return y;
+  this.getCol = function() {
+    return col;
+  }
+  this.equals = function(other) {
+    return row === other.getRow() && col === other.getCol();
   }
 }
 
