@@ -28,6 +28,7 @@ html(lang="en")
       }
 
       $('#temp').on('click', function(event) {
-        b.makeMove({from: {col: 1, row: 6}, to: {col: 1, row: 4}}, {from: {col: 3, row: 0}, to: {col: 3, row: 1}});
+        b.makeMove(new Move('WHITE', new Coord(6, 1), 'NORTH', 2),
+                   new Move('BLACK', new Coord(0, 3), 'SOUTH', 1));
       });
 

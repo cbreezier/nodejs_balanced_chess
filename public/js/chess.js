@@ -198,21 +198,36 @@ function Board(id) {
     return moves;
   }
 
-  this.makeMove = function(whiteMove, blackMove) {
-    var temp;
-    temp = cells[whiteMove.from.row][whiteMove.from.col].piece;
-    cells[whiteMove.from.row][whiteMove.from.col].piece = null;
-    temp.cell = cells[whiteMove.to.row][whiteMove.to.col];
-    cells[whiteMove.to.row][whiteMove.to.col].piece = temp;
+  this.getCell = function(coord) {
+    if (this.withinBounds(coord)) {
+      return cells[coord.getRow()][coord.getCol()];
+    } else {
+      return null;
+    }
+  }
 
-    temp = cells[blackMove.from.row][blackMove.from.col].piece;
-    cells[blackMove.from.row][blackMove.from.col].piece = null;
-    temp.cell = cells[blackMove.to.row][blackMove.to.col];
-    cells[blackMove.to.row][blackMove.to.col].piece = temp;
+  this.makeMove = function(whiteMove, blackMove) {
+    var cellFrom;
+    var cellTo;
+    var piece;
+
+    cellFrom = this.getCell(whiteMove.from);
+    cellTo = this.getCell(whiteMove.to);
+    piece = cellFrom.piece;
+    cellFrom.piece = null;
+    piece.cell = cellTo;
+    cellTo.piece = piece;
+
+    cellFrom = this.getCell(blackMove.from);
+    cellTo = this.getCell(blackMove.to);
+    piece = cellFrom.piece;
+    cellFrom.piece = null;
+    piece.cell = cellTo;
+    cellTo.piece = piece;
 
     // Add move to moves[]
-    var move = '' + whiteMove.from.col + whiteMove.from.row + whiteMove.to.col + whiteMove.to.row +
-                    blackMove.from.col + blackMove.from.row + blackMove.to.col + blackMove.to.row;
+    var move = '' + whiteMove.from.getCol() + whiteMove.from.getRow() + whiteMove.to.getCol() + whiteMove.to.getRow() +
+                    blackMove.from.getCol() + blackMove.from.getRow() + blackMove.to.getCol() + blackMove.to.getRow();
     moves.push(move);
     console.log(moves);
 
@@ -364,7 +379,7 @@ function Move(player, from, direction, distance) {
   this.path = [];
 
   var cur = new Coord(from.getRow(), from.getCol());
-  for (var i = 0; i < this.direction; i++) {
+  for (var i = 0; i < this.distance; i++) {
     cur = cur.inDirection(direction);
     this.path.push(cur);
   }
