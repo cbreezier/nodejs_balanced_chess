@@ -211,27 +211,65 @@ function Board(id) {
     var cellTo;
     var piece;
 
-    cellFrom = this.getCell(whiteMove.from);
-    cellTo = this.getCell(whiteMove.to);
-    piece = cellFrom.piece;
-    cellFrom.piece = null;
-    piece.cell = cellTo;
-    cellTo.piece = piece;
+    // result in the form of 'ACTION WINNER'
+    var result = null;
 
-    cellFrom = this.getCell(blackMove.from);
-    cellTo = this.getCell(blackMove.to);
-    piece = cellFrom.piece;
-    cellFrom.piece = null;
-    piece.cell = cellTo;
-    cellTo.piece = piece;
+    // if W in B path and B in W path (ie, crossed)
+    if (whiteMove.to.inPath(blackMove.path) && blackMove.to.inPath(whiteMove.path)) {
+      result = 'FIGHT';
+    } else if (whiteMove.to.inPath(blackMove.path)) {
+      result = 'INTERCEPT WHITE';
+    } else if (blackMove.to.inPath(whiteMove.path)) {
+      result = 'INTERCEPT BLACK';
+    } else {
+      // Noone is in each others path - check if there was a dodge
+      if (whiteMove.to.equals(blackMove.from) && blackMove.to.equals(whiteMove.from)) {
+        // Double dodge ie they both tried to kill each other
+        result = 'FIGHT';
+      } else if (whiteMove.to.equals(blackMove.from)) {
+        result = 'DODGE BLACK';
+      } else if (blackMove.to.equals(whiteMove.from)) {
+        result = 'DODGE WHITE';
+      } else {
+        result = 'NOTHING';
+      }
+    }
+
+    if (result === null) {
+      // Some error
+      console.log('No result was found for move made - this should never happen');
+    }
+
+    if (result === 'FIGHT') {
+      // Process who wins, and what moves where
+    } else {
+      // Just move the pieces
+      var whiteCellFrom = this.getCell(whiteMove.from);
+      var blackCellFrom = this.getCell(blackMove.from);
+      var whitePiece = whiteCellFrom.piece;
+      var blackPiece = blackCellFrom.piece;
+
+      whiteCellFrom.piece = null;
+      blackCellFrom.piece = null;
+
+      var cellTo;
+
+      cellTo = this.getCell(whiteMove.to);
+      whitePiece.cell = cellTo;
+      cellTo.piece = whitePiece;
+
+      cellTo = this.getCell(blackMove.to);
+      blackPiece.cell = cellTo;
+      cellTo.piece = blackPiece;
+    }
 
     // Add move to moves[]
     var move = '' + whiteMove.from.getCol() + whiteMove.from.getRow() + whiteMove.to.getCol() + whiteMove.to.getRow() +
                     blackMove.from.getCol() + blackMove.from.getRow() + blackMove.to.getCol() + blackMove.to.getRow();
     moves.push(move);
-    console.log(moves);
 
     this.draw();
+    return result;
   }
 
   this.reset = function() {
@@ -406,6 +444,14 @@ function Coord(newRow, newCol) {
   }
   this.equals = function(other) {
     return row === other.getRow() && col === other.getCol();
+  }
+  this.inPath = function(path) {
+    for (var i = 0; i < path.length; i++) {
+      if (this.equals(path[i])) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
